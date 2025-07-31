@@ -3,452 +3,563 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Evolving Learner: An Interactive Analysis of Gen Z</title>
+    <title>Interactive Report: Generation Alpha & The Future of Education</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: A single-page dashboard with a sticky top navigation for easy access to thematic sections: 'The Gen Z Learner', 'Rethinking Education', 'Holistic Values', and 'Generational Comparison'. This non-linear, thematic structure is chosen over the report's linear format to allow users to directly explore areas of interest. Key interactions include dynamic chart updates via buttons for generational comparison and interactive cards for key stats, making complex data easily digestible and engaging. This user-driven exploration path is more aligned with Gen Z's own learning preferences. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
+    <!-- Application Structure Plan: A thematic, top-down interactive dashboard. The flow is designed to first introduce Gen Alpha, then compare them to prior generations to establish context, followed by a deep dive into their core traits. The centerpiece is an an interactive grid connecting these traits directly to educational challenges and solutions, addressing the user's primary interest. The structure avoids a linear report format in favor of an exploratory experience, guiding the user from broad understanding to specific, actionable insights. This non-linear, thematic approach is chosen for better usability and information synthesis. -->
     <!-- Visualization & Content Choices: 
-        - Report Info: Gen Z skepticism of degree value -> Goal: Inform -> Viz: Doughnut Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Clearly shows proportion and ROI concern.
-        - Report Info: Rise in vocational interest -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Effectively contrasts declining university enrollment with rising trade school interest.
-        - Report Info: Generational traits comparison -> Goal: Compare/Organize -> Viz: Radar Chart (Chart.js) -> Interaction: Button clicks to update chart for each generation -> Justification: Provides a powerful, multi-variable visual comparison of complex attributes in a single view.
-        - Report Info: Key statistics (mental health, DEI) -> Goal: Inform -> Presentation: Styled HTML stat cards -> Interaction: Subtle hover effects -> Justification: Highlights critical data points in a scannable, impactful format.
-        - CONFIRMING NO SVG/Mermaid. All visuals use Chart.js on Canvas or styled HTML. -->
+        - Report Info: Key stats (population, diversity). Goal: Inform. Method: Large, animated number counters. Interaction: On-scroll trigger. Justification: Makes key data points impactful and engaging.
+        - Report Info: Gen Alpha traits linked to educational implications (Table 2). Goal: Show Relationships/Organize. Method: Interactive HTML/CSS/JS grid. Interaction: Click a trait to highlight its corresponding challenge and strategy. Justification: This creates a dynamic, cause-and-effect exploration of the report's core thesis, making complex relationships intuitive and easy to grasp.
+        - Report Info: Strategic recommendations. Goal: Inform/Organize. Method: Accordion-style list. Interaction: Click to expand. Justification: Presents dense recommendations in a clean, manageable format.
+        - Report Info: Trait elaboration. Goal: Inform/Elaborate. Method: LLM-generated text. Interaction: Click button to generate. Justification: Provides deeper insights on demand, leveraging Gemini API.
+    -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #FDFBF8;
-            color: #404040;
+            background-color: #FDFBF8; /* Warm neutral background */
+            color: #4B4B4B;
         }
         .nav-link {
-            position: relative;
             transition: color 0.3s ease;
+            position: relative;
             padding-bottom: 4px;
         }
         .nav-link::after {
             content: '';
             position: absolute;
+            bottom: 0;
+            left: 0;
             width: 0;
             height: 2px;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #D97706;
+            background-color: #D97706; /* Accent color */
             transition: width 0.3s ease;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: #171717;
         }
         .nav-link:hover::after, .nav-link.active::after {
             width: 100%;
         }
         .stat-card {
             background-color: #FFFFFF;
-            border: 1px solid #F3F4F6;
+            border: 1px solid #F3EFEA;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .trait-card {
+            background-color: #FFFFFF;
+            border: 1px solid #F3EFEA;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .trait-card.active {
+            border-color: #D97706;
+            background-color: #FFFBEB;
+            transform: scale(1.03);
+        }
+        .trait-card.inactive {
+            opacity: 0.5;
+            filter: grayscale(80%);
+        }
+        .implication-card {
+            background-color: #F7F5F2;
+            border: 1px solid #EAE6E1;
+            transition: all 0.3s ease;
+        }
+        .implication-card.highlight {
+            background-color: #FEF3C7;
+            border-color: #FBBF24;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
         }
         .chart-container {
             position: relative;
-            margin: auto;
-            height: 300px;
             width: 100%;
-            max-width: 450px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
         }
         @media (min-width: 768px) {
             .chart-container {
-                height: 350px;
-                max-width: 500px;
+                height: 450px;
             }
         }
-        .gen-button {
-            transition: all 0.3s ease;
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
         }
-        .gen-button.active {
-            background-color: #D97706;
-            color: #FFFFFF;
-            transform: scale(1.05);
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
         }
     </style>
 </head>
 <body class="antialiased">
 
-    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200">
-        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex-shrink-0">
-                    <h1 class="text-xl font-bold text-gray-800">The Evolving Learner</h1>
-                </div>
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="#profile" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Gen Z Profile</a>
-                        <a href="#rethinking" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Rethinking Education</a>
-                        <a href="#values" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Holistic Values</a>
-                        <a href="#comparison" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Generational Comparison</a>
-                    </div>
-                </div>
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-200/50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-amber-700">Gen Alpha Insights</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#intro" class="nav-link active">Introduction</a>
+                <a href="#traits" class="nav-link">Core Traits</a>
+                <a href="#education" class="nav-link">Education Impact</a>
+                <a href="#recommendations" class="nav-link">Recommendations</a>
             </div>
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-4 6h4"></path></svg>
+            </button>
         </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#intro" class="block py-2 text-center nav-link">Introduction</a>
+            <a href="#traits" class="block py-2 text-center nav-link">Core Traits</a>
+            <a href="#education" class="block py-2 text-center nav-link">Education Impact</a>
+            <a href="#recommendations" class="block py-2 text-center nav-link">Recommendations</a>
+        </div>
     </header>
 
     <main>
-        <section id="hero" class="py-20 md:py-28 bg-amber-50">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Meet Generation Z</h2>
-                <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-600">Inherently digital, deeply pragmatic, and driven by purpose. This interactive report explores how Gen Z is fundamentally reshaping the educational landscape, forcing a re-evaluation of how we teach, what we value, and why.</p>
-            </div>
-        </section>
-
-        <section id="profile" class="py-16 md:py-24">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h3 class="text-3xl font-bold text-gray-900">The Digital Native Learner</h3>
-                    <p class="mt-3 max-w-2xl mx-auto text-lg text-gray-600">This section explores the core identity of the Gen Z learner. Born into a world of peak technology, their learning styles, information consumption habits, and expectations are unlike any generation before them. They don't just use technology; they exist within it.</p>
-                </div>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="stat-card p-6 rounded-lg shadow-sm">
-                        <h4 class="font-bold text-lg text-gray-800">Visual & Interactive First</h4>
-                        <p class="mt-2 text-gray-600">Gen Z overwhelmingly prefers learning through visual media. YouTube isn't just for entertainment; it's their primary research tool. They thrive on interactive simulations and infographics over static textbooks.</p>
+        <section id="intro" class="py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl md:text-6xl font-bold tracking-tight text-gray-800">The Alpha Generation</h2>
+                <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">Born into a world of AI, ubiquitous screens, and unprecedented connectivity, Generation Alpha is redefining childhood and demanding a fundamental transformation of education. This interactive report explores their unique traits and the challenges and opportunities they present.</p>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    <div class="stat-card p-6 rounded-xl shadow-md">
+                        <div class="text-4xl font-bold text-amber-600" data-target="2">0</div>
+                        <p class="mt-2 text-gray-600 font-medium">Billion+ Globally by 2025</p>
+                        <p class="text-sm text-gray-500 mt-1">The largest generation in history.</p>
                     </div>
-                    <div class="stat-card p-6 rounded-lg shadow-sm">
-                        <h4 class="font-bold text-lg text-gray-800">Active & Self-Directed</h4>
-                        <p class="mt-2 text-gray-600">Passive learning is rejected. Gen Z demands active involvement and real-world application. They are adept at sourcing their own information and expect personalized, on-demand learning experiences they can control.</p>
+                    <div class="stat-card p-6 rounded-xl shadow-md">
+                        <div class="text-4xl font-bold text-amber-600" data-target="48">0</div>
+                        <p class="mt-2 text-gray-600 font-medium">% White in the U.S.</p>
+                        <p class="text-sm text-gray-500 mt-1">The most diverse generation yet.</p>
                     </div>
-                    <div class="stat-card p-6 rounded-lg shadow-sm">
-                        <h4 class="font-bold text-lg text-gray-800">Instant Feedback Loop</h4>
-                        <p class="mt-2 text-gray-600">Accustomed to the immediacy of the digital world, this generation expects rapid feedback on their work. Continuous assessment is valued far more than delayed, end-of-term evaluations.</p>
-                    </div>
-                    <div class="stat-card p-6 rounded-lg shadow-sm lg:col-span-2">
-                        <h4 class="font-bold text-lg text-gray-800">The "Information Sensibility" Paradox</h4>
-                        <p class="mt-2 text-gray-600">While masters of accessing information, Gen Z can struggle with critical evaluation. They often scan for relevance rather than engaging in deep, linear reading, highlighting a critical need for educators to teach digital discernment and media literacy.</p>
-                    </div>
-                    <div class="stat-card p-6 rounded-lg shadow-sm">
-                        <h4 class="font-bold text-lg text-gray-800">Creators, Not Just Consumers</h4>
-                        <p class="mt-2 text-gray-600">Engagement soars when Gen Z is given the opportunity to create. Podcasts, documentaries, and digital presentations are not just assignments but preferred modes of demonstrating understanding and innovation.</p>
+                    <div class="stat-card p-6 rounded-xl shadow-md">
+                        <div class="text-4xl font-bold text-amber-600" data-target="76">0</div>
+                        <p class="mt-2 text-gray-600 font-medium">% Can Code or Want to Learn</p>
+                        <p class="text-sm text-gray-500 mt-1">Innate technological fluency.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="rethinking" class="py-16 md:py-24 bg-gray-50">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="traits" class="py-20">
+            <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
-                    <h3 class="text-3xl font-bold text-gray-900">Rethinking the Value of Education</h3>
-                    <p class="mt-3 max-w-2xl mx-auto text-lg text-gray-600">This section examines Gen Z's pragmatic and ROI-driven approach to higher education. Witnessing the financial struggles of previous generations, they are questioning the traditional four-year degree and actively exploring alternative, skill-based pathways that promise a clearer and faster return on investment.</p>
+                    <h3 class="text-3xl md:text-4xl font-bold text-gray-800">Core Characteristics</h3>
+                    <p class="mt-3 text-lg text-gray-600 max-w-3xl mx-auto">Generation Alpha's worldview is shaped by a unique blend of digital immersion, global consciousness, and pandemic-era experiences. Explore their defining traits below, which form the basis for the educational challenges ahead.</p>
                 </div>
-                <div class="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
-                    <div class="text-center md:text-left">
-                        <h4 class="text-2xl font-semibold text-gray-800 mb-4">The ROI-Driven Mindset</h4>
-                        <p class="text-gray-600 mb-4">A fear of substantial student loan debt is a primary driver for Gen Z. They are far more likely than previous generations to weigh the cost of a degree against its potential career earnings. This has led to a significant shift towards practical majors like health professions and computer science, and away from the humanities.</p>
-                        <p class="text-gray-600">This pragmatism also fuels a strong entrepreneurial spirit, with many aspiring to start their own businesses rather than follow a traditional corporate path.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="p-6 stat-card rounded-lg">
+                        <h4 class="font-bold text-lg text-amber-700">📱 AI-Native & Digital First</h4>
+                        <p class="mt-2 text-gray-600">Technology isn't a tool; it's an extension of self. They've never known a world without smartphones, voice assistants, and on-demand content.</p>
+                        <button class="mt-4 bg-amber-600 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-700 transition-colors generate-elaboration" data-trait="AI-Native & Digital First">✨ Elaborate</button>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="degreeValueChart"></canvas>
+                    <div class="p-6 stat-card rounded-lg">
+                        <h4 class="font-bold text-lg text-amber-700">⚡ Shorter Attention Spans</h4>
+                        <p class="mt-2 text-gray-600">Accustomed to short-form content (TikTok, Reels), they thrive on microlearning and struggle with sustained, passive focus.</p>
+                        <button class="mt-4 bg-amber-600 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-700 transition-colors generate-elaboration" data-trait="Shorter Attention Spans">✨ Elaborate</button>
                     </div>
-                </div>
-                <div class="grid md:grid-cols-2 gap-8 lg:gap-12 items-center mt-16">
-                     <div class="chart-container md:order-last">
-                        <canvas id="pathwaysChart"></canvas>
+                    <div class="p-6 stat-card rounded-lg">
+                        <h4 class="font-bold text-lg text-amber-700">🎮 Visual & Interactive Learners</h4>
+                        <p class="mt-2 text-gray-600">They prefer gamified, multimedia, and hands-on learning over traditional textbooks and lectures. Learning must be an experience.</p>
+                        <button class="mt-4 bg-amber-600 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-700 transition-colors generate-elaboration" data-trait="Visual & Interactive Learners">✨ Elaborate</button>
                     </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-2xl font-semibold text-gray-800 mb-4">The Rise of Alternative Pathways</h4>
-                        <p class="text-gray-600 mb-4">There is a notable surge in interest in vocational training, certifications, and short-term credentials. These options are seen as providing direct, applicable skills for the workforce without the high cost and time commitment of a traditional degree.</p>
-                        <p class="text-gray-600">However, a "guidance gap" exists. Many students and their parents lack awareness of these alternative options, highlighting a need for better career counseling in K-12 education.</p>
+                    <div class="p-6 stat-card rounded-lg">
+                        <h4 class="font-bold text-lg text-amber-700">🌍 Globally Conscious</h4>
+                        <p class="mt-2 text-gray-600">Hyper-connectedness exposes them to global issues like climate change and social justice from a young age, fostering empathy.</p>
+                        <button class="mt-4 bg-amber-600 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-700 transition-colors generate-elaboration" data-trait="Globally Conscious">✨ Elaborate</button>
+                    </div>
+                    <div class="p-6 stat-card rounded-lg">
+                        <h4 class="font-bold text-lg text-amber-700">🏆 Desire for Instant Gratification</h4>
+                        <p class="mt-2 text-gray-600">They expect immediate feedback and results, challenging traditional academic structures that rely on delayed rewards.</p>
+                        <button class="mt-4 bg-amber-600 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-700 transition-colors generate-elaboration" data-trait="Desire for Instant Gratification">✨ Elaborate</button>
+                    </div>
+                    <div class="p-6 stat-card rounded-lg">
+                        <h4 class="font-bold text-lg text-amber-700">🤝 Individualistic & Socially Different</h4>
+                        <p class="mt-2 text-gray-600">Preferring digital interaction (e.g., gaming platforms) can lead to gaps in face-to-face communication skills, a trend amplified by the pandemic.</p>
+                        <button class="mt-4 bg-amber-600 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-700 transition-colors generate-elaboration" data-trait="Individualistic & Socially Different">✨ Elaborate</button>
+                    </div>
+                     <div class="p-6 stat-card rounded-lg">
+                        <h4 class="font-bold text-lg text-amber-700">✍️ Underdeveloped Fine Motor Skills</h4>
+                        <p class="mt-2 text-gray-600">Increased screen time and less hands-on play can lead to challenges with tasks requiring fine motor coordination, like handwriting.</p>
+                        <button class="mt-4 bg-amber-600 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-700 transition-colors generate-elaboration" data-trait="Underdeveloped Fine Motor Skills">✨ Elaborate</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="values" class="py-16 md:py-24">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h3 class="text-3xl font-bold text-gray-900">Beyond Academics: Holistic Values</h3>
-                    <p class="mt-3 max-w-2xl mx-auto text-lg text-gray-600">This section delves into the core values that define Gen Z's worldview and influence their educational and career choices. For this generation, success is not just about salary; it's about well-being, purpose, and social impact. These are not preferences, but non-negotiable requirements.</p>
-                </div>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="stat-card p-8 rounded-lg shadow-sm">
-                        <h4 class="text-2xl font-semibold text-amber-600 mb-3">Mental Health is a Priority</h4>
-                        <p class="text-gray-600 mb-4">Gen Z is more open about mental health struggles than any previous generation. They actively seek support and prioritize employers and institutions that offer robust mental health and wellness benefits. The stress of debt, economic instability, and digital overload are major concerns.</p>
-                        <div class="text-4xl font-bold text-gray-800">42%</div>
-                        <p class="text-sm text-gray-500">report experiencing depression and feelings of hopelessness.</p>
-                    </div>
-                    <div class="stat-card p-8 rounded-lg shadow-sm">
-                        <h4 class="text-2xl font-semibold text-amber-600 mb-3">DEI is Non-Negotiable</h4>
-                        <p class="text-gray-600 mb-4">As the most diverse generation in history, Gen Z expects and demands genuine commitment to Diversity, Equity, and Inclusion. They are action-oriented and want to see institutions actively working to solve systemic inequalities. A sense of belonging is critical.</p>
-                        <div class="text-4xl font-bold text-gray-800">83%</div>
-                        <p class="text-sm text-gray-500">of job candidates review a company's DEI program before accepting an offer.</p>
-                    </div>
+        <section id="trait-elaboration-section" class="py-12 bg-gray-50 hidden">
+            <div class="container mx-auto px-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">Elaboration on: <span id="elaboration-trait-title" class="text-amber-700"></span></h3>
+                <div id="elaboration-content" class="bg-white p-6 rounded-lg shadow-md text-gray-700 leading-relaxed">
+                    <p id="elaboration-loading" class="text-center text-gray-500 hidden">Generating insights... Please wait.</p>
+                    <div id="elaboration-text"></div>
+                    <p id="elaboration-error" class="text-center text-red-500 hidden">Error generating elaboration. Please try again.</p>
                 </div>
             </div>
         </section>
 
-        <section id="comparison" class="py-16 md:py-24 bg-gray-50">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="education" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
-                    <h3 class="text-3xl font-bold text-gray-900">Generational Comparison</h3>
-                    <p class="mt-3 max-w-2xl mx-auto text-lg text-gray-600">This interactive chart allows you to compare the distinct educational and professional attributes of four generations. Click on a generation to see how their learning styles, motivations, and technological fluency differ, providing a clear picture of the evolving educational landscape.</p>
+                    <h3 class="text-3xl md:text-4xl font-bold text-gray-800">The Impact on Education</h3>
+                    <p class="mt-3 text-lg text-gray-600 max-w-4xl mx-auto">The traits of Generation Alpha directly translate into new challenges and opportunities for educators. Click on a trait below to see its corresponding educational implication and the recommended strategic response. This interaction reveals the direct line from student behavior to necessary pedagogical evolution.</p>
                 </div>
-                <div class="flex justify-center flex-wrap gap-3 mb-8">
-                    <button class="gen-button active px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-semibold text-gray-700 shadow-sm" data-gen="genz">Gen Z</button>
-                    <button class="gen-button px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-semibold text-gray-700 shadow-sm" data-gen="millennials">Millennials</button>
-                    <button class="gen-button px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-semibold text-gray-700 shadow-sm" data-gen="genx">Gen X</button>
-                    <button class="gen-button px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-semibold text-gray-700 shadow-sm" data-gen="boomers">Baby Boomers</button>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="education-grid">
                 </div>
-                <div class="grid lg:grid-cols-5 gap-8 items-center">
-                    <div class="lg:col-span-3 chart-container mx-auto h-[350px] md:h-[450px] max-w-[600px]">
-                        <canvas id="comparisonChart"></canvas>
-                    </div>
-                    <div id="comparison-text" class="lg:col-span-2">
-                        <h4 id="gen-title" class="text-2xl font-bold text-gray-800 mb-2"></h4>
-                        <p id="gen-desc" class="text-gray-600"></p>
-                    </div>
+                 <div class="text-center mt-8">
+                    <button id="reset-button" class="bg-amber-600 text-white font-bold py-2 px-6 rounded-full hover:bg-amber-700 transition-colors duration-300">Reset View</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="recommendations" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold text-gray-800">Strategic Recommendations</h3>
+                    <p class="mt-3 text-lg text-gray-600 max-w-3xl mx-auto">To effectively prepare Generation Alpha, stakeholders must adopt a forward-thinking and adaptive approach. Here are five key strategic pillars for transforming education.</p>
+                </div>
+                <div class="max-w-3xl mx-auto space-y-4" id="accordion-container">
                 </div>
             </div>
         </section>
     </main>
 
     <footer class="bg-gray-800 text-white py-8">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p>Interactive Report created from "The Evolving Learner" analysis.</p>
-            <p class="text-sm text-gray-400 mt-2">This is a conceptual web application based on the provided source document.</p>
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2025 Gen Alpha Insights. An interactive summary based on public research.</p>
+            <p class="text-sm text-gray-400 mt-2">This application is for informational purposes only.</p>
         </div>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            
-            const chartData = {
-                degreeValue: {
-                    labels: ['Skeptical of Traditional Degree Value', 'Consider it Important'],
-                    data: [45, 55],
-                },
-                pathways: {
-                    labels: ['Freshman College Enrollment Drop', 'Increase in Short-Term Credentials'],
-                    data: [-16, 70],
-                },
-                comparison: {
-                    labels: ['Digital Native', 'ROI-Driven', 'Values DEI', 'Values Mental Health', 'Prefers Active Learning', 'Entrepreneurial'],
-                    genz: {
-                        data: [10, 9, 9, 9, 10, 8],
-                        title: 'Generation Z (1997-2012)',
-                        description: 'True digital natives who are pragmatic, purpose-driven, and demand flexibility. They view education as an investment and prioritize well-being and social impact alongside career goals.'
-                    },
-                    millennials: {
-                        data: [8, 6, 7, 8, 8, 7],
-                        title: 'Millennials (1981-1996)',
-                        description: 'Digital pioneers who value collaboration and work-life balance. Burdened by student debt, they seek purpose and professional development in their careers.'
-                    },
-                    genx: {
-                        data: [5, 7, 5, 5, 6, 9],
-                        title: 'Generation X (1965-1980)',
-                        description: 'Independent, adaptable, and tech-savvy. They value self-reliance and practical skills, often balancing career growth with family responsibilities.'
-                    },
-                    boomers: {
-                        data: [2, 4, 4, 3, 4, 5],
-                        title: 'Baby Boomers (1946-1964)',
-                        description: 'Prefer traditional, structured learning environments. Motivated by a strong work ethic, company loyalty, and a sense of duty, their careers were often defined by stability.'
-                    }
-                }
-            };
-
-            const renderDegreeValueChart = () => {
-                const ctx = document.getElementById('degreeValueChart')?.getContext('2d');
-                if (!ctx) return;
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: chartData.degreeValue.labels,
-                        datasets: [{
-                            label: 'Value Perception',
-                            data: chartData.degreeValue.data,
-                            backgroundColor: ['#FBBF24', '#F3F4F6'],
-                            borderColor: ['#FBBF24', '#F3F4F6'],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${context.raw}%`;
-                                    }
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Gen Z Perception of Traditional Degree Value'
-                            }
-                        }
-                    }
-                });
-            };
-
-            const renderPathwaysChart = () => {
-                const ctx = document.getElementById('pathwaysChart')?.getContext('2d');
-                if (!ctx) return;
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: chartData.pathways.labels,
-                        datasets: [{
-                            label: '% Change',
-                            data: chartData.pathways.data,
-                            backgroundColor: (context) => {
-                                const value = context.raw;
-                                return value > 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)';
-                            },
-                            borderColor: (context) => {
-                                const value = context.raw;
-                                return value > 0 ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)';
-                            },
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false,
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${context.raw}%`;
-                                    }
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Shift in Post-Secondary Pathways'
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            let comparisonChart;
-            const renderComparisonChart = (gen = 'genz') => {
-                const ctx = document.getElementById('comparisonChart')?.getContext('2d');
-                if (!ctx) return;
-
-                const data = chartData.comparison[gen].data;
-                const title = chartData.comparison[gen].title;
-                const description = chartData.comparison[gen].description;
-                
-                document.getElementById('gen-title').textContent = title;
-                document.getElementById('gen-desc').textContent = description;
-
-                if (comparisonChart) {
-                    comparisonChart.data.datasets[0].data = data;
-                    comparisonChart.data.datasets[0].label = gen.charAt(0).toUpperCase() + gen.slice(1);
-                    comparisonChart.update();
-                } else {
-                    comparisonChart = new Chart(ctx, {
-                        type: 'radar',
-                        data: {
-                            labels: chartData.comparison.labels,
-                            datasets: [{
-                                label: 'Gen Z',
-                                data: data,
-                                fill: true,
-                                backgroundColor: 'rgba(217, 119, 6, 0.2)',
-                                borderColor: 'rgb(217, 119, 6)',
-                                pointBackgroundColor: 'rgb(217, 119, 6)',
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: 'rgb(217, 119, 6)'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: {
-                                r: {
-                                    angleLines: {
-                                        color: 'rgba(0, 0, 0, 0.1)'
-                                    },
-                                    grid: {
-                                        color: 'rgba(0, 0, 0, 0.1)'
-                                    },
-                                    pointLabels: {
-                                        font: {
-                                            size: 12
-                                        },
-                                        color: '#404040'
-                                    },
-                                    ticks: {
-                                        backdropColor: 'transparent',
-                                        stepSize: 2,
-                                        display: false
-                                    },
-                                    suggestedMin: 0,
-                                    suggestedMax: 10
-                                }
-                            }
-                        }
-                    });
-                }
-            };
-            
-            const genButtons = document.querySelectorAll('.gen-button');
-            genButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    genButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    renderComparisonChart(button.dataset.gen);
-                });
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
             });
 
             const navLinks = document.querySelectorAll('.nav-link');
-            const sections = document.querySelectorAll('section[id]');
-            
+            const sections = document.querySelectorAll('main section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         navLinks.forEach(link => {
-                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
                         });
                     }
                 });
-            }, { rootMargin: "-50% 0px -50% 0px" });
+            }, observerOptions);
 
             sections.forEach(section => {
                 observer.observe(section);
             });
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (mobileMenu.classList.contains('hidden') === false) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
 
-            renderDegreeValueChart();
-            renderPathwaysChart();
-            renderComparisonChart('genz');
+            function animateValue(obj, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    obj.innerHTML = Math.floor(progress * (end - start) + start);
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    } else {
+                        obj.innerHTML = end;
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+
+            const statObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counters = entry.target.querySelectorAll('[data-target]');
+                        counters.forEach(counter => {
+                            const target = +counter.getAttribute('data-target');
+                            animateValue(counter, 0, target, 1500);
+                        });
+                        statObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            const introSection = document.getElementById('intro');
+            if (introSection) {
+                // Trigger animation immediately if section is already in view on load
+                const rect = introSection.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom >= 0) {
+                    const counters = introSection.querySelectorAll('[data-target]');
+                    counters.forEach(counter => {
+                        const target = +counter.getAttribute('data-target');
+                        animateValue(counter, 0, target, 1500);
+                    });
+                }
+                statObserver.observe(introSection);
+            }
+
+            const educationData = [
+                {
+                    trait: 'Digital Native/AI Immersion',
+                    challenge: 'Digital dependency & rapid obsolescence of traditional methods.',
+                    strategy: 'Integrate AI/AR/VR tools; emphasize digital literacy & responsible screen time.'
+                },
+                {
+                    trait: 'Shorter Attention Spans',
+                    challenge: 'Difficulty with sustained focus on traditional lectures or long tasks.',
+                    strategy: 'Implement microlearning, gamification, and frequent hands-on activities.'
+                },
+                {
+                    trait: 'Desire for Instant Gratification',
+                    challenge: 'Low motivation for delayed rewards; demand for immediate feedback.',
+                    strategy: 'Design gamified feedback loops and project-based learning with quick wins.'
+                },
+                {
+                    trait: 'Visual/Interactive Preference',
+                    challenge: 'Ineffectiveness of text-heavy, non-interactive teaching methods.',
+                    strategy: 'Utilize multimedia, interactive platforms, and personalized learning experiences.'
+                },
+                {
+                    trait: 'Individualistic/Social Gaps',
+                    challenge: 'Deficits in face-to-face communication and group dynamics.',
+                    strategy: 'Explicitly teach social skills; incorporate collaborative group activities.'
+                },
+                {
+                    trait: 'Underdeveloped Fine Motor Skills',
+                    challenge: 'Challenges with manual tasks like writing due to excessive screen time.',
+                    strategy: 'Incorporate hands-on activities, traditional writing, and physical play.'
+                }
+            ];
+
+            const educationGrid = document.getElementById('education-grid');
+            const resetButton = document.getElementById('reset-button');
+
+            function renderGrid(activeTrait = null) {
+                educationGrid.innerHTML = '';
+                
+                // Create header row
+                const headerTitles = ['Core Trait', 'Educational Challenge', 'Strategic Response'];
+                headerTitles.forEach(title => {
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'text-xl font-bold text-center text-gray-700 mb-4'; // Added mb-4 for spacing
+                    headerDiv.textContent = title;
+                    educationGrid.appendChild(headerDiv);
+                });
+
+                educationData.forEach((item, index) => {
+                    const traitCard = document.createElement('div');
+                    traitCard.className = 'trait-card p-4 rounded-lg h-full flex items-center justify-center text-center';
+                    traitCard.textContent = item.trait;
+                    traitCard.dataset.index = index;
+
+                    const challengeCard = document.createElement('div');
+                    challengeCard.className = 'implication-card p-4 rounded-lg h-full flex items-center';
+                    challengeCard.textContent = item.challenge;
+                    challengeCard.dataset.index = index;
+
+                    const strategyCard = document.createElement('div');
+                    strategyCard.className = 'implication-card p-4 rounded-lg h-full flex items-center';
+                    strategyCard.textContent = item.strategy;
+                    strategyCard.dataset.index = index;
+
+                    if (activeTrait !== null) {
+                        if (item.trait === activeTrait) {
+                            traitCard.classList.add('active');
+                            challengeCard.classList.add('highlight');
+                            strategyCard.classList.add('highlight');
+                        } else {
+                            traitCard.classList.add('inactive');
+                        }
+                    }
+
+                    traitCard.addEventListener('click', () => renderGrid(item.trait));
+
+                    educationGrid.appendChild(traitCard);
+                    educationGrid.appendChild(challengeCard);
+                    educationGrid.appendChild(strategyCard);
+                });
+            }
+            
+            if (educationGrid) {
+                renderGrid();
+            }
+            
+            if(resetButton) {
+                resetButton.addEventListener('click', () => renderGrid());
+            }
+
+            const accordionData = [
+                {
+                    title: 'Proactive Technology Integration',
+                    content: 'Invest in robust digital infrastructure (high-speed Wi-Fi, charging stations) and ensure equitable access to devices. Continuously integrate cutting-edge tech like AR, VR, and AI into learning platforms.'
+                },
+                {
+                    title: 'Curriculum Modernization',
+                    content: 'Shift focus from rote memorization to future-proof skills: critical thinking, creativity, and problem-solving. Prioritize STEM, coding, and AI literacy from an early age, alongside digital citizenship and media literacy.'
+                },
+                {
+                    title: 'Comprehensive Teacher Training',
+                    content: 'Provide extensive professional development for educators on integrating digital tools and innovative pedagogies like gamification and personalized learning. Support them in addressing challenges like diminished attention spans.'
+                },
+                {
+                    title: 'Holistic Student Development',
+                    content: 'Implement a framework that equally values academic, social-emotional, and physical well-being. Use Social-Emotional Learning (SEL) programs and integrate hands-on activities to balance screen time and develop fine motor skills.'
+                },
+                {
+                    title: 'Fostering Collaborative Ecosystems',
+                    content: 'Strengthen partnerships between schools, parents, and technology providers. Design flexible learning environments that promote both online and in-person collaboration, preparing students for an interconnected world.'
+                }
+            ];
+
+            const accordionContainer = document.getElementById('accordion-container');
+            if (accordionContainer) {
+                accordionData.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'border border-gray-200 rounded-lg bg-white';
+                    
+                    const button = document.createElement('button');
+                    button.className = 'w-full flex justify-between items-center p-5 text-left font-semibold text-gray-700 hover:bg-gray-50';
+                    button.innerHTML = `
+                        <span>${item.title}</span>
+                        <svg class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    `;
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'accordion-content';
+                    contentDiv.innerHTML = `<p class="p-5 pt-0 text-gray-600">${item.content}</p>`;
+
+                    itemDiv.appendChild(button);
+                    itemDiv.appendChild(contentDiv);
+                    accordionContainer.appendChild(itemDiv);
+
+                    button.addEventListener('click', () => {
+                        const isExpanded = contentDiv.style.maxHeight && contentDiv.style.maxHeight !== '0px';
+                        
+                        document.querySelectorAll('.accordion-content').forEach(el => el.style.maxHeight = '0px');
+                        document.querySelectorAll('.accordion-container button svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
+
+                        if (!isExpanded) {
+                            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+                            button.querySelector('svg').style.transform = 'rotate(180deg)';
+                        }
+                    });
+                });
+            }
+
+            // Gemini API Integration for Trait Elaboration
+            const elaborationSection = document.getElementById('trait-elaboration-section');
+            const elaborationTraitTitle = document.getElementById('elaboration-trait-title');
+            const elaborationContent = document.getElementById('elaboration-content');
+            const elaborationLoading = document.getElementById('elaboration-loading');
+            const elaborationText = document.getElementById('elaboration-text');
+            const elaborationError = document.getElementById('elaboration-error');
+
+            const generateElaborationButtons = document.querySelectorAll('.generate-elaboration');
+
+            generateElaborationButtons.forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const trait = event.target.dataset.trait;
+                    
+                    elaborationSection.classList.remove('hidden');
+                    elaborationTraitTitle.textContent = trait;
+                    elaborationText.innerHTML = '';
+                    elaborationError.classList.add('hidden');
+                    elaborationLoading.classList.remove('hidden');
+                    elaborationContent.classList.add('animate-pulse'); // Add a subtle loading animation
+
+                    // Scroll to the new section
+                    elaborationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    const prompt = `Elaborate on the characteristic of Generation Alpha: '${trait}'. Provide a detailed explanation, including why it's a defining trait and its general implications, in about 3-4 paragraphs. Focus on key aspects and real-world impact.`;
+
+                    try {
+                        const generatedText = await callGeminiAPI(prompt);
+                        elaborationText.innerHTML = generatedText.replace(/\n/g, '<br>'); // Preserve line breaks
+                        elaborationError.classList.add('hidden');
+                    } catch (error) {
+                        console.error('Gemini API call failed:', error);
+                        elaborationText.innerHTML = '';
+                        elaborationError.classList.remove('hidden');
+                        elaborationError.textContent = 'Failed to generate insights. Please try again later.';
+                    } finally {
+                        elaborationLoading.classList.add('hidden');
+                        elaborationContent.classList.remove('animate-pulse');
+                    }
+                });
+            });
+
+            async function callGeminiAPI(prompt, retries = 3, delay = 1000) {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // If you want to use models other than gemini-2.5-flash-preview-05-20 or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            if (response.status === 429 && i < retries - 1) { // Too Many Requests
+                                await new Promise(res => setTimeout(res, delay));
+                                delay *= 2; // Exponential backoff
+                                continue;
+                            }
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+                        if (result.candidates && result.candidates.length > 0 &&
+                            result.candidates[0].content && result.candidates[0].content.parts &&
+                            result.candidates[0].content.parts.length > 0) {
+                            return result.candidates[0].content.parts[0].text;
+                        } else {
+                            throw new Error('Unexpected API response structure or no content.');
+                        }
+                    } catch (error) {
+                        if (i === retries - 1) throw error; // Re-throw on last retry
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2; // Exponential backoff
+                    }
+                }
+                throw new Error('Failed to fetch from Gemini API after multiple retries.');
+            }
         });
     </script>
 </body>
